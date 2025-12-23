@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>الحلاق لتجارة السيارات الألمانية - معرض السيارات</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {--primary:#1abc9c;--secondary:#16a085;--success:#27ae60;--danger:#e74c3c;--light-bg:#ecf0f1;--dark-bg:#1c1c1c;--light-text:#333;--dark-text:#eee;}
+body{margin:0;font-family:'Roboto',sans-serif;background:var(--light-bg);color:var(--light-text);transition:0.3s;}
+body.dark{background:var(--dark-bg);color:var(--dark-text);}
+header{background:linear-gradient(to right,var(--primary),var(--secondary));color:white;padding:20px;text-align:center;position:sticky;top:0;z-index:100;box-shadow:0 5px 15px rgba(0,0,0,0.3);}
+header h1{margin:0;font-size:2em;font-weight:bold;}
+header .contact{margin-top:5px;font-size:0.9em;}
+header .contact a{color:#f1c40f;margin:0 10px;text-decoration:none;}
+#darkModeToggle{cursor:pointer;padding:5px 10px;border:none;border-radius:5px;background:#555;color:white;margin-left:10px;}
+#controls{max-width:900px;margin:15px auto;text-align:center;display:flex;flex-wrap:wrap;justify-content:center;gap:12px;}
+#controls select,#controls input,#controls button{padding:10px 12px;margin:5px;border-radius:8px;border:1px solid #ccc;font-weight:bold;}
+#controls button{background:var(--primary);color:white;border:none;cursor:pointer;transition:0.3s;}
+#controls button:hover{background:var(--secondary);}
+#carGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:22px;padding:20px;}
+.card{background:#fff;border-radius:15px;overflow:hidden;box-shadow:0 8px 20px rgba(0,0,0,0.3);transition:transform 0.3s, background 0.3s;cursor:pointer;position:relative;}
+body.dark .card{background:#2c2c2c;}
+.card img{width:100%;height:180px;object-fit:cover;transition:transform 0.4s;}
+.card img:hover{transform:scale(1.08);}
+.card-content{padding:12px;text-align:center;}
+.card-content h3{margin:0;color:#2c3e50;font-weight:700;}
+body.dark .card-content h3{color:#eee;}
+.card-content p{margin:5px 0;color:#555;font-size:0.95em;}
+body.dark .card-content p{color:#ccc;}
+.price{color:var(--danger);font-weight:bold;font-size:1.1em;}
+.card-content button{padding:6px 10px;margin:5px;border:none;border-radius:6px;font-weight:bold;cursor:pointer;transition:0.3s;}
+.btn-edit{background:var(--primary);color:white;}
+.btn-edit:hover{background:var(--secondary);}
+.btn-delete{background:var(--danger);color:white;}
+.btn-delete:hover{background:#c0392b;}
+#addFormContainer,#editFormContainer{max-width:650px;margin:20px auto;background:#ffffffcc;padding:22px;border-radius:15px;box-shadow:0 8px 25px rgba(0,0,0,0.4);display:none;animation:slideUp 0.5s;}
+body.dark #addFormContainer,body.dark #editFormContainer{background:#333333cc;}
+@keyframes slideUp{from{opacity:0;transform:translateY(60px);}to{opacity:1;transform:translateY(0);}}
+#addFormContainer input,#addFormContainer select,#addFormContainer textarea,#addFormContainer button,
+#editFormContainer input,#editFormContainer select,#editFormContainer textarea,#editFormContainer button{width:100%;padding:12px;margin:10px 0;border-radius:8px;border:1px solid #ccc;font-size:1em;}
+#addFormContainer button,#editFormContainer button{background:var(--success);color:white;font-weight:bold;border:none;cursor:pointer;transition:0.3s;}
+#addFormContainer button:hover,#editFormContainer button:hover{background:#219150;}
+.modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);display:none;justify-content:center;align-items:center;z-index:10;animation:fadeIn 0.4s;}
+.modal-content{background:#fff;padding:22px;border-radius:15px;max-width:480px;text-align:center;position:relative;transform:translateY(-20px);transition:transform 0.4s;}
+body.dark .modal-content{background:#2c2c2c;color:#eee;}
+.modal-content img{width:100%;height:230px;object-fit:cover;border-radius:12px;transition:transform 0.3s;}
+.modal-content img:hover{transform:scale(1.06);}
+.close-modal{position:absolute;top:10px;right:15px;font-size:1.5em;cursor:pointer;font-weight:bold;}
+#toggleAddForm,#toggleEditForm{background: var(--primary);color:white;padding:14px 20px;border:none;border-radius:9px;cursor:pointer;font-weight:bold;margin:20px auto;display:block;transition:0.3s;}
+#toggleAddForm:hover,#toggleEditForm:hover{background: var(--secondary);}
+</style>
+</head>
+<body>
+
+<header>
+<h1>الحلاق لتجارة السيارات الألمانية</h1>
+<div class="contact">
+📞 0959103074 |
+<a href="https://www.facebook.com" target="_blank">Facebook</a>
+<button id="darkModeToggle" onclick="toggleDarkMode()">🌙 Dark Mode</button>
+</div>
+</header>
+
+<div id="controls">
+<select id="filterType"><option value="all">الكل</option><option value="sale">بيع</option><option value="rent">إيجار</option></select>
+<select id="filterBrand"><option value="">كل الماركات</option></select>
+<select id="filterModel"><option value="">كل الموديلات</option></select>
+<select id="filterYear"><option value="">كل السنوات</option></select>
+<button onclick="render()">📋 عرض كل السيارات</button>
+</div>
+
+<div id="carGrid"></div>
+
+<button id="toggleAddForm">➕ إضافة سيارة</button>
+<div id="addFormContainer">
+<form id="carForm">
+<select id="brand" required><option value="">اختر الماركة</option></select>
+<select id="model" required><option value="">اختر الموديل</option></select>
+<select id="year" required><option value="">اختر سنة الصنع</option></select>
+<input type="number" id="price" placeholder="السعر بالدولار" required>
+<select id="type" required><option value="">بيع ام اجار</option><option value="sale">بيع</option><option value="rent">إيجار</option></select>
+<textarea id="desc" placeholder="وصف السيارة" rows="2"></textarea>
+<input type="file" id="image" accept="image/*">
+<button type="submit">💾 حفظ السيارة</button>
+</form>
+</div>
+
+<button id="toggleEditForm">✏️ تعديل سيارة</button>
+<div id="editFormContainer">
+<form id="editForm">
+<select id="editBrand" required><option value="">اختر الماركة</option></select>
+<select id="editModel" required><option value="">اختر الموديل</option></select>
+<select id="editYear" required><option value="">اختر سنة الصنع</option></select>
+<input type="number" id="editPrice" placeholder="السعر بالدولار" required>
+<select id="editType" required><option value="">بيع ام اجار</option><option value="sale">بيع</option><option value="rent">إيجار</option></select>
+<textarea id="editDesc" placeholder="وصف السيارة" rows="2"></textarea>
+<input type="file" id="editImage" accept="image/*">
+<button type="submit">💾 حفظ التعديلات</button>
+</form>
+</div>
+
+<div class="modal" id="detailModal">
+<div class="modal-content">
+<span class="close-modal" onclick="closeModal()">×</span>
+<img id="detailImg" src="">
+<h3 id="detailTitle"></h3>
+<p id="detailYear"></p>
+<p id="detailPrice"></p>
+<p id="detailType"></p>
+<p id="detailDesc"></p>
+</div>
+</div>
+
+<script>
+let cars=JSON.parse(localStorage.getItem("cars")||"[]");
+let brands=["BMW","Audi","Mercedes","Volkswagen","Toyota","Nissan","Ford","Chevrolet","Hyundai","Kia","Honda","Mazda","Lexus","Porsche","Jaguar","Land Rover","Tesla"];
+let allModels=["X1","X3","X5","M5","A3","A4","A6","C200","E63","S500","Golf","Passat","Corolla","Camry","Land Cruiser","Altima","Maxima","GTR","Focus","Mustang","Explorer","Malibu","Camaro","Tahoe","Elantra","Sonata","Tucson","Sportage","Sorento","Civic","Accord","CRV","3","6","CX-5","RX","ES","LS","911","Cayenne","XE","XF","Discovery","Range Rover","Model S","Model 3","Model X","Model Y"];
+let years=[];for(let y=2000;y<=2025;y++) years.push(y);
+
+const defaultImage="https://via.placeholder.com/400x200?text=الحلاق+لتجارة+السيارات";
+
+const brandSelect=document.getElementById("brand");
+const modelSelect=document.getElementById("model");
+const yearSelect=document.getElementById("year");
+const editBrand=document.getElementById("editBrand");
+const editModel=document.getElementById("editModel");
+const editYear=document.getElementById("editYear");
+const filterBrand=document.getElementById("filterBrand");
+const filterModel=document.getElementById("filterModel");
+const filterYear=document.getElementById("filterYear");
+const filterType=document.getElementById("filterType");
+
+brands.forEach(b=>{let o=document.createElement("option");o.value=o.text=b;brandSelect.add(o.cloneNode(true));editBrand.add(o.cloneNode(true));filterBrand.add(o.cloneNode(true));});
+allModels.forEach(m=>{let o=document.createElement("option");o.value=o.text=m;modelSelect.add(o.cloneNode(true));editModel.add(o.cloneNode(true));filterModel.add(o.cloneNode(true));});
+years.forEach(y=>{let o=document.createElement("option");o.value=o.text=y;yearSelect.add(o.cloneNode(true));editYear.add(o.cloneNode(true));filterYear.add(o.cloneNode(true));});
+
+let editingIndex=null;
+function save(){localStorage.setItem("cars",JSON.stringify(cars));}
+function render(filterObj={}){const div=document.getElementById("carGrid");div.innerHTML="";cars.forEach((c,i)=>{
+if(filterObj.type && filterObj.type!=="all" && c.type!==filterObj.type) return;
+if(filterObj.brand && c.brand!==filterObj.brand) return;
+if(filterObj.model && c.model!==filterObj.model) return;
+if(filterObj.year && c.year!==filterObj.year) return;
+const card=document.createElement("div");card.className="card";
+card.innerHTML=`<img src="${c.image||defaultImage}" onclick="showDetail(${i})"><div class="card-content"><h3>${c.brand} ${c.model}</h3><p>سنة الصنع: ${c.year}</p><p class="price">السعر: $${c.price}</p><p>بيع ام اجار: ${c.type==="sale"?"بيع":"إيجار"}</p><p>${c.desc}</p><button class="btn-edit" onclick="openEdit(${i})">✏️ تعديل</button><button class="btn-delete" onclick="del(${i})">❌ حذف</button></div>`;
+div.appendChild(card);
+});}
+
+function del(i){if(confirm("هل أنت متأكد من حذف هذه السيارة؟")){cars.splice(i,1);save();render(applyFilterObj());}}
+
+document.getElementById("carForm").onsubmit=e=>{
+e.preventDefault();
+const imgInput=document.getElementById("image").files[0];
+if(imgInput){const reader=new FileReader();reader.onload=()=>{
+cars.push({brand:brandSelect.value,model:modelSelect.value,year:yearSelect.value,price:price.value,type:type.value,desc:desc.value,image:reader.result});
+save();render(applyFilterObj());document.getElementById("addFormContainer").style.display="none";e.target.reset();
+};reader.readAsDataURL(imgInput);}
+else{cars.push({brand:brandSelect.value,model:modelSelect.value,year:yearSelect.value,price:price.value,type:type.value,desc:desc.value,image:defaultImage});save();render(applyFilterObj());document.getElementById("addFormContainer").style.display="none";e.target.reset();}
+}
+
+document.getElementById("editForm").onsubmit=e=>{
+e.preventDefault();
+const c=cars[editingIndex];
+c.brand=editBrand.value;c.model=editModel.value;c.year=editYear.value;c.price=editPrice.value;c.type=editType.value;c.desc=editDesc.value;
+const img=document.getElementById("editImage").files[0];
+if(img){const reader=new FileReader();reader.onload=()=>{c.image=reader.result;save();render(applyFilterObj());document.getElementById("editFormContainer").style.display="none";};reader.readAsDataURL(img);}
+else{save();render(applyFilterObj());document.getElementById("editFormContainer").style.display="none";}
+}
+
+document.getElementById("toggleAddForm").onclick=function(){const f=document.getElementById("addFormContainer");f.style.display=(f.style.display==="block")?"none":"block";}
+document.getElementById("toggleEditForm").onclick=function(){const f=document.getElementById("editFormContainer");f.style.display=(f.style.display==="block")?"none":"block";}
+function openEdit(i){editingIndex=i;const c=cars[i];editBrand.value=c.brand;editModel.value=c.model;editYear.value=c.year;editPrice.value=c.price;editType.value=c.type;editDesc.value=c.desc;document.getElementById("editImage").value=null;document.getElementById("editFormContainer").style.display="block";}
+function showDetail(i){const c=cars[i];document.getElementById("detailImg").src=c.image||defaultImage;document.getElementById("detailTitle").innerText=c.brand+" "+c.model;document.getElementById("detailYear").innerText="سنة الصنع: "+c.year;document.getElementById("detailPrice").innerText="السعر: $"+c.price;document.getElementById("detailType").innerText="بيع ام اجار: "+(c.type==="sale"?"بيع":"إيجار");document.getElementById("detailDesc").innerText=c.desc;document.getElementById("detailModal").style.display="flex";}
+function closeModal(){document.getElementById("detailModal").style.display="none";}
+function applyFilterObj(){return{type:filterType.value,brand:filterBrand.value,model:filterModel.value,year:filterYear.value};}
+function applyFilter(){render(applyFilterObj());}
+filterBrand.onchange=applyFilter;filterModel.onchange=applyFilter;filterYear.onchange=applyFilter;filterType.onchange=applyFilter;
+function toggleDarkMode(){document.body.classList.toggle("dark");}
+render();
+</script>
+
+</body>
+</html>
